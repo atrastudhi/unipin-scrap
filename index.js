@@ -11,7 +11,6 @@ const default_headers = [
   '_gcl_au=1.1.704961040.1606123105',
   '_gid=GA1.2.483313835.1606123105',
   '__cfduid=d42003e8f4bde2a747fc50ef9dff8c2a91606123105',
-  'RT="z=1&dm=unipin.com&si=y8evqvau5xk&ss=khuc86zf&sl=0&tt=0"',
   '_gat_UA-81857948-3=1'
 ]
 
@@ -27,6 +26,7 @@ const parsing_headers = (headers) => {
     const [att, val] = e.split('=');
     res += `; ${att}=${val}`;
   })
+  res += '; RT="z=1&dm=unipin.com&si=y8evqvau5xk&ss=khuc86zf&sl=0&tt=0"'
   return res;
 }
 
@@ -42,16 +42,17 @@ const app = async () => {
     const undf_val = $('input[type="hidden"]').get('2').attribs.value;
     
     if (email_attr && pass_attr && token_val && undf_attr && undf_val) {
-      let fd = new FormData();
+      // let fd = new FormData();
 
-      fd.append('_token', token_val);
-      fd.append(undf_attr, undf_val);
-      fd.append(email_attr, process.env.UNIPIN_ID);
-      fd.append(pass_attr, process.env.UNIPIN_PW);
+      // fd.append('_token', token_val);
+      // fd.append(undf_attr, undf_val);
+      // fd.append(email_attr, process.env.UNIPIN_ID);
+      // fd.append(pass_attr, process.env.UNIPIN_PW);
 
+      let body = `_token=${token_val}&${undf_attr}=${undf_val}&${email_attr}=${encodeURIComponent(process.env.UNIPIN_ID)}&${pass_attr}=${encodeURIComponent(process.env.UNIPIN_PW)}`;
       const parse_headers = parsing_headers(headers)
 
-      await axios.post('https://www.unipin.com/login', fd, {
+      const res = await axios.post('https://www.unipin.com/login', body, {
         headers: {
           accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
           'content-type': 'application/x-www-form-urlencoded',
@@ -59,9 +60,12 @@ const app = async () => {
           origin: 'https://www.unipin.com',
           referer: 'https://www.unipin.com/login',
           cookie: parse_headers,
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
         }
       });
-      
+
+      console.log(res)
+      fs.writeFileSync('index.html', res.data)
     } else throw 'attr required';
   } catch (err) {
     console.log(err);
